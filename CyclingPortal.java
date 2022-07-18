@@ -41,21 +41,26 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 			if (race.getRaceName().equals(name)) {
 				nameTaken = true;
 			}
+			for (Stage stage : race.getRaceStages()) {
+				if (stage.getStageName().equals(name)) {
+					nameTaken = true;
+				}
+			}
 		}
 
 		
 		if (name.length() > 30) {
-			throw new InvalidNameException("The name was too long. Cannot be more than 30 Characters.");
+			throw new InvalidNameException("Cannot be more than 30 Characters. The name must be shortened.");
 		}
 		if (name == null || name.length() == 0) {
-			throw new InvalidNameException("The name was empty.");
+			throw new InvalidNameException("Can not have a empty name.");
 		}
 		if (nameTaken) {
 			String response = "The name " + name + " is already taken.";
 			throw new IllegalNameException(response);
 		}
 		if (name.contains(" ")) {
-			throw new InvalidNameException("The name contains spaces.");
+			throw new InvalidNameException("The name can not have spaces.");
 		}
 	}
 
@@ -68,7 +73,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	 */
 	public Team getTeamFromId(int id) throws IDNotRecognisedException {
 		if (!teams.containsKey(id)) {
-			String response = "Team ID " + id + " does not exist.";
+			String response = "Team ID " + id + " does not match with a team.";
 			throw new IDNotRecognisedException(response);
 		}
 		return teams.get(id);
@@ -92,7 +97,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 
 	/**
-	 * This will retrive a rider base off their id.
+	 * This will retrive a rider based off their id.
 	 * 
 	 * @param id
 	 * @return The rider based off their id.
@@ -106,8 +111,23 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 				}
 			}
 		}
-		String response = "The Rider ID " + id + " does not exist.";
+		String response = "The Rider ID " + id + " does not match with a rider.";
 		throw new IDNotRecognisedException(response);
+	}
+
+	/**
+	 * This will retrive a race based off their id.
+	 * 
+	 * @param id
+	 * @return The race based off their id.
+	 * @throws IDNotRecognisedException
+	 */
+	public Race getRaceFromId(int id) throws IDNotRecognisedException {
+		if (!races.containsKey(id)) {
+			String response = "The Race ID " + id + " does not match with a race.";
+			throw new IDNotRecognisedException(response);
+		}
+		return races.get(id);
 	}
 
 	@Override
@@ -153,8 +173,19 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	public int addStageToRace(int raceId, String stageName, String description, double length, LocalDateTime startTime,
 			StageType type)
 			throws IDNotRecognisedException, IllegalNameException, InvalidNameException, InvalidLengthException {
-		// TODO Auto-generated method stub
-		return 0;
+				
+		Race race = getRaceFromId(raceId);
+		checkName(stageName);
+		
+		if (length < 5) {
+			throw new InvalidLengthException("The stage must be at least 5 kilometers.");
+		}
+
+		int stageId = idCounter++;
+		Stage stage = new Stage(raceId, stageId, stageName, description, length, startTime, type);
+		race.addStageToRace(stage);
+
+		return stageId;
 	}
 
 	@Override

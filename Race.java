@@ -1,10 +1,14 @@
 package cycling;
 
+import java.util.ArrayList;
+
 public class Race {
 
     private int raceId;
     private String raceName;
     private String raceDescription;
+
+    private ArrayList<Stage> stages = new ArrayList<Stage>();
 
     /**
      * This is the constructor for a race object.
@@ -32,8 +36,31 @@ public class Race {
         return this.raceName;
     }
 
+    /**
+     * Used to get the description of the race.
+     * 
+     * @return A string values of the race description.
+     */
     public String getRaceDescription() {
         return this.raceDescription;
+    }
+
+    /**
+     * Used to get the stages of the race.
+     * 
+     * @return An array of values of the stages of a race.
+     */
+    public Stage[] getRaceStages() {
+        return this.stages.toArray(new Stage[0]);
+    }
+
+    /**
+     * Used to add a stage to a race.
+     * 
+     * @param stage
+     */
+    public void addStageToRace(Stage stage) {
+        this.stages.add(stage);
     }
     
 }
