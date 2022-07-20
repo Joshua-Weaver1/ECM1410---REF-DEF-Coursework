@@ -165,8 +165,9 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 	@Override
 	public int getNumberOfStages(int raceId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		Race race = getRaceFromId(raceId);
+		return race.getRaceStages().length;
 	}
 
 	@Override
