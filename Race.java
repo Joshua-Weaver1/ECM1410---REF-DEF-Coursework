@@ -2,11 +2,17 @@ package cycling;
 
 import java.util.ArrayList;
 
+/**
+ * A class used to create an instance of a race.
+ * 
+ * @author Joshua Weaver
+ */
+
 public class Race {
 
     private int raceId;
-    private String raceName;
     private String raceDescription;
+    private String raceName;
 
     private ArrayList<Stage> stages = new ArrayList<Stage>();
 
@@ -23,6 +29,11 @@ public class Race {
         this.raceDescription = description;
     }
 
+    /**
+     * Used to obtain the race id.
+     * 
+     * @return The race id.
+     */
     public int getRaceId() {
         return this.raceId;
     }
@@ -61,6 +72,28 @@ public class Race {
      */
     public void addStageToRace(Stage stage) {
         this.stages.add(stage);
+    }
+
+    /**
+     * Used to get all the stage ids from a race.
+     * 
+     * @return A list containing all the stage ids from a race.
+     */
+    public int[] getStageIdsFromRace() {
+        int[] listOfStageIds = new int[this.stages.size()];
+        for (int i = 0; i < listOfStageIds.length; i++) {
+            listOfStageIds[i] = this.stages.get(i).getStageId();
+        }
+        return listOfStageIds;
+    }
+
+    /**
+     * This method will remove the selected stage from the race.
+     * 
+     * @param stage
+     */
+    public void removeStageFromRace(Stage stage) {
+        this.stages.remove(stage);
     }
     
 }

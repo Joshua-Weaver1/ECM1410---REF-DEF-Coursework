@@ -15,7 +15,12 @@ import java.util.HashMap;
  */
 public class CyclingPortal implements MiniCyclingPortalInterface {
 
-	private int idCounter = 1;
+	private int teamIdCounter = 1;
+	private int raceIdCounter = 1;
+	private int stageIdCounter = 1;
+	private int riderIdCounter = 1;
+	private int segmentIdCounter = 1;
+
 	private HashMap<Integer, Team> teams = new HashMap<Integer, Team>();
 	private HashMap<Integer, Race> races = new HashMap<Integer, Race>();
 	
@@ -130,6 +135,54 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 		return races.get(id);
 	}
 
+	/**
+	 * This will retrive a stage based off their id.
+	 * 
+	 * @param id
+	 * @return The stage based off their id.
+	 * @throws IDNotRecognisedException
+	 */
+	public Stage getStageFromId(int id) throws IDNotRecognisedException {
+		for (Race race : races.values()) {
+			for (Stage stage : race.getRaceStages()) {
+				if (stage.getStageId() == id) {
+					return stage;
+				}
+			}
+		}
+		String response = "The Stage ID " + id + " does not match with a stage.";
+		throw new IDNotRecognisedException(response);
+	}
+
+	/**
+	 * The reason for this method is to examine if the segment to be created follows
+	 * all the necessary requirements. It will see if the stage's boundaries are not
+	 * gone over by the segment, and that the stage it will be joining is not waiting for
+	 * results or a TT.
+	 * 
+	 * @param stageId
+	 * @param location
+	 * @param type
+	 * @param length
+	 * @throws InvalidLocationException
+	 * @throws InvalidStageTypeException
+	 * @throws IDNotRecognisedException
+	 * @throws InvalidStageStateException
+	 */
+	private void checkSegmentDetails(int stageId, Double location, SegmentType type, Double length) throws InvalidLocationException, InvalidStageTypeException, IDNotRecognisedException, InvalidStageStateException {
+		Stage stage = getStageFromId(stageId);
+
+		if (location > stage.getStageLength() || location-length < 0) {
+			throw new InvalidLocationException("The location is out of bounds of the stage length.");
+		}
+		
+		if (stage.getStageType() == StageType.TT) {
+			throw new InvalidStageTypeException("A segment can not be added to a Time Trial");
+		}
+
+		stage.isStageNotWaitingForResultsCheck();
+	}
+
 	@Override
 	public int[] getRaceIds() {
 		int[] listOfRaceIds = new int[races.size()];
@@ -145,7 +198,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	public int createRace(String name, String description) throws IllegalNameException, InvalidNameException {
 		checkName(name);
 
-		int raceId = idCounter++;
+		int raceId = raceIdCounter++;
 		Race race = new Race(raceId, name, description);
 		races.put(raceId, race);
 		return raceId;
@@ -153,13 +206,28 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 	@Override
 	public String viewRaceDetails(int raceId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return null;
+		Race race = getRaceFromId(raceId);
+
+		double lengthOfRace = 0;
+		for (Stage stage : race.getRaceStages()) {
+			lengthOfRace = lengthOfRace + stage.getStageLength();
+		}
+
+		String raceDetails = "The race id is " + raceId + ". " + "The race name is " + 
+		race.getRaceName() + ". " + "The race description is: " + race.getRaceDescription() +
+		". " + "The number of stages in this race are " + race.getRaceStages().length + ". " +
+		"The total length of the race is " + lengthOfRace + "km. ";
+
+		return raceDetails;
 	}
 
 	@Override
 	public void removeRaceById(int raceId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
+		Race race = getRaceFromId(raceId);
+		for (Stage stage : race.getRaceStages()) {
+			race.removeStageFromRace(stage);
+		}
+		races.remove(race.getRaceId());
 
 	}
 
@@ -182,7 +250,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 			throw new InvalidLengthException("The stage must be at least 5 kilometers.");
 		}
 
-		int stageId = idCounter++;
+		int stageId = stageIdCounter++;
 		Stage stage = new Stage(raceId, stageId, stageName, description, length, startTime, type);
 		race.addStageToRace(stage);
 
@@ -191,19 +259,22 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 	@Override
 	public int[] getRaceStages(int raceId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return null;
+
+		Race race = getRaceFromId(raceId);
+		return race.getStageIdsFromRace();
 	}
 
 	@Override
 	public double getStageLength(int stageId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return 0;
+		Stage stage = getStageFromId(stageId);
+		return stage.getStageLength();
 	}
 
 	@Override
 	public void removeStageById(int stageId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
+		Stage stage = getStageFromId(stageId);
+		int idOfRace = stage.getStageRaceId();
+		races.get(idOfRace).removeStageFromRace(stage);
 
 	}
 
@@ -211,8 +282,14 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	public int addCategorizedClimbToStage(int stageId, Double location, SegmentType type, Double averageGradient,
 			Double length) throws IDNotRecognisedException, InvalidLocationException, InvalidStageStateException,
 			InvalidStageTypeException {
-		// TODO Auto-generated method stub
-		return 0;
+
+		checkSegmentDetails(stageId, location, type, length);
+		Stage stage = getStageFromId(stageId);
+		int segmentId = segmentIdCounter++;
+		CategorizedClimb categorizedClimb = new CategorizedClimb(stageId, segmentId, length, location, averageGradient, type);
+		stage.addSegmentToStage(categorizedClimb);
+
+		return segmentId;
 	}
 
 	@Override
@@ -236,15 +313,15 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 	@Override
 	public int[] getStageSegments(int stageId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return null;
+		Stage stage = getStageFromId(stageId);
+		return stage.getSegmentIdsFromStage();
 	}
 
 	@Override
 	public int createTeam(String name, String description) throws IllegalNameException, InvalidNameException {
 		checkName(name);
 
-		int teamId = idCounter++;
+		int teamId = teamIdCounter++;
 		Team team = new Team(teamId, name, description);
 		teams.put(teamId, team);
 		return teamId;
@@ -280,7 +357,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 		Team team = getTeamFromId(teamID);
 		
-		int riderId = idCounter++;
+		int riderId = riderIdCounter++;
 		Rider newRider = new Rider(riderId, teamID, name, yearOfBirth);
 		team.addRider(newRider);
 

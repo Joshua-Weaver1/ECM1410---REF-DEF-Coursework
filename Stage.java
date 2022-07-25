@@ -1,17 +1,25 @@
 package cycling;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+
+/**
+ * A class used to create an instance of a stage.
+ * 
+ * @author Joshua Weaver
+ */
 
 public class Stage {
 
     private String stageName;
     private String stageDescription;
     private double stageLength;
-    private int raceId;
     private int stageId;
+    private int raceId;
     private LocalDateTime stageStartTime;
     private String stageState;
     private StageType stageType;
+    private ArrayList<Segment> segments = new ArrayList<Segment>();
 
     /**
      * This is the constructor for a stage object.
@@ -28,8 +36,8 @@ public class Stage {
             StageType type) {
         
         this.stageLength = length;
-        this.raceId = raceId;
         this.stageId = stageId;
+        this.raceId = raceId;
         this.stageDescription = description;
         this.stageName = stageName;
         this.stageStartTime = startTime;
@@ -107,6 +115,45 @@ public class Stage {
      */
     public StageType getStageType() {
         return this.stageType;
+    }
+
+    /**
+     * The purpose of this method is to check if this stage state
+     * is currently "waiting for results".
+     * 
+     * @throws InvalidStageStateException
+     */
+    public void isStageNotWaitingForResultsCheck() throws InvalidStageStateException {
+        if (this.stageState.equals("waiting for results")) {
+			throw new InvalidStageStateException("Waiting for results is the current stage state.");
+		}
+    }
+
+    public void addSegmentToStage(CategorizedClimb categorizedClimb) {
+        // Ensures that the segments are stored in chronological order
+        int sortedIndex = 0;
+        for (Segment comparison : this.segments) {
+            if (comparison.getSegmentLocation() > categorizedClimb.getSegmentLocation()) {
+                break;
+            }
+            sortedIndex++;
+        }
+
+        this.segments.add(sortedIndex, categorizedClimb);
+    }
+
+    /**
+     * The purpose of this methods is to return a list 
+     * of all the segments in a stage.
+     * 
+     * @return A list of type Segment with all segments.
+     */
+    public int[] getSegmentIdsFromStage() {
+        int[] listOfSegmentIds = new int[this.segments.size()];
+        for (int i = 0; i < listOfSegmentIds.length; i++) {
+            listOfSegmentIds[i] = this.segments.get(i).getStageId();
+        }
+        return listOfSegmentIds;
     }
     
 }

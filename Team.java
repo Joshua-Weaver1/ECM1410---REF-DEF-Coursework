@@ -2,11 +2,17 @@ package cycling;
 
 import java.util.ArrayList;
 
+/**
+ * A class used to create an instance of a team.
+ * 
+ * @author Joshua Weaver
+ */
+
 public class Team {
 
     private int teamId;
-    private String teamName;
     private String teamDescription;
+    private String teamName;
 
     private ArrayList<Rider> teamRiders = new ArrayList<>();
 
@@ -19,8 +25,8 @@ public class Team {
      */
     public Team(int teamId, String name, String description) {
         this.teamId = teamId;
-        this.teamName = name;
         this.teamDescription = description;
+        this.teamName = name;
     }
 
     /**
