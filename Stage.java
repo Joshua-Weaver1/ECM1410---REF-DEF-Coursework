@@ -1,7 +1,9 @@
 package cycling;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 /**
  * A class used to create an instance of a stage.
@@ -20,6 +22,7 @@ public class Stage {
     private String stageState;
     private StageType stageType;
     private ArrayList<Segment> segments = new ArrayList<Segment>();
+    private LinkedHashMap<Integer, ArrayList<LocalTime>> stageResults = new LinkedHashMap<Integer, ArrayList<LocalTime>>();
 
     /**
      * This is the constructor for a stage object.
@@ -129,22 +132,22 @@ public class Stage {
 		}
     }
 
-    public void addSegmentToStage(CategorizedClimb categorizedClimb) {
+    public void addSegmentToStage(Segment segment) {
         // Ensures that the segments are stored in chronological order
         int sortedIndex = 0;
         for (Segment comparison : this.segments) {
-            if (comparison.getSegmentLocation() > categorizedClimb.getSegmentLocation()) {
+            if (comparison.getSegmentLocation() > segment.getSegmentLocation()) {
                 break;
             }
             sortedIndex++;
         }
 
-        this.segments.add(sortedIndex, categorizedClimb);
+        this.segments.add(sortedIndex, segment);
     }
 
     /**
      * The purpose of this methods is to return a list 
-     * of all the segments in a stage.
+     * of all the segment ids in a stage.
      * 
      * @return A list of type Segment with all segments.
      */
@@ -155,5 +158,226 @@ public class Stage {
         }
         return listOfSegmentIds;
     }
-    
+
+    /**
+     * The purpose of this methods is to return all the segments in 
+     * a stage.
+     * 
+     * @return An array of type Segment.
+     */
+    public Segment[] getStageSegments() {
+        return this.segments.toArray(new Segment[0]);
+    }
+
+    /**
+     * The purpose of this method is to remove a specified segment
+     * from the stage.
+     * 
+     * @param segment
+     */
+    public void removeStageSegment(Segment segment) {
+        this.segments.remove(segment);
+    }
+
+    /**
+     * The purpose of this method is to set the stage
+     * state.
+     * 
+     * @param string
+     */
+    public void setStageState(String string) {
+        this.stageState = string;
+    }
+
+    /**
+     * The purpose of this method is to retieve the
+     * stage results from a particular rider.
+     * 
+     * @param riderId
+     * @return An array of type LocalTime holding the
+     * stage results for a rider.
+     */
+    public LocalTime[] getStageResults(int riderId) {
+        if (!this.stageResults.containsKey(riderId)) {
+            return new LocalTime[0];
+        }
+        ArrayList<LocalTime> listOfRiderResults = this.stageResults.get(riderId);
+        LocalTime[] riderResultsFromArray = new LocalTime[listOfRiderResults.size()-1];
+        for (int i = 1; i < listOfRiderResults.size()-1; i++) {
+            riderResultsFromArray[i-1] = listOfRiderResults.get(i);
+        }
+        LocalTime timePassedForRider = LocalTime.ofNanoOfDay(getElapsedTimeOfRiderFromId(riderId));
+        riderResultsFromArray[listOfRiderResults.size()-2] = timePassedForRider;
+        return riderResultsFromArray;
+    }
+
+    /**
+     * The purpose of this method is to return the elapsed
+     * time of the rider.
+     * 
+     * @param riderId
+     * @return The long value of the elapsed time of
+     * the rider in nanoseconds.
+     */
+    private long getElapsedTimeOfRiderFromId(int riderId) {
+        assert (this.stageResults.containsKey(riderId));
+        LocalTime timeOfRidersStart = this.stageResults.get(riderId).get(0);
+        int positionOfLastSegment = this.segments.size() + 1;
+        LocalTime riderTimeOfFinish = this.stageResults.get(riderId).get(positionOfLastSegment);
+        long elapsedTimeOfRider = riderTimeOfFinish.toNanoOfDay() - timeOfRidersStart.toNanoOfDay();
+        if (elapsedTimeOfRider < 0) {
+            elapsedTimeOfRider += 1000000000L*60L*60L*24L;
+        }
+        return elapsedTimeOfRider;
+    }
+
+    /**
+     * The purpose of this method is to add an inputted set of riders
+     * results to the stage.
+     * 
+     * @param riderId
+     * @param checkpoints
+     */
+    public void addStageResults(int riderId, LocalTime[] checkpoints) {
+        ArrayList<LocalTime> arrayOfResults = new ArrayList<LocalTime>();
+        for (LocalTime item : checkpoints) {
+            arrayOfResults.add(item);
+        }
+		this.stageResults.put(riderId, arrayOfResults);
+    }
+
+    /**
+     * The purpose of this method is to check if this stage state
+     * is currently "waiting for results".
+     * 
+     * @throws InvalidStageStateException
+     */
+    public void isStageWaitingForResultsCheck() throws InvalidStageStateException {
+        if (!this.stageState.equals("waiting for results")) {
+			throw new InvalidStageStateException("Waiting for results is the current stage state.");
+		}
+    }
+
+    /**
+     * The purpose of this method is to remove the results for
+     * a specified rider.
+     * 
+     * @param riderId
+     * 
+     */
+    public void deleteRiderResultsFromStage(int riderId) {
+        this.stageResults.remove(riderId);
+    }
+
+    /**
+     * The purpose of this method is to obtain the adjusted elapsed time
+     * of a specified rider. If two riders finish inside of 1 second, then
+     * they both have the quicker time.
+     * 
+     * @param riderId
+     * @return A time of type LocalTime.
+     * 
+     */
+    public LocalTime getAdjustedElapsedTimeOfRider(int riderId) {
+        if (!this.stageResults.containsKey(riderId)) {
+            return null;
+        }
+        
+        long elapsedTimeOfRider = getElapsedTimeOfRiderFromId(riderId);
+        if (this.stageType == StageType.TT) {
+			return LocalTime.ofNanoOfDay(elapsedTimeOfRider);
+		}
+
+        boolean isAdjustmentMade = false;
+
+		while ( isAdjustmentMade == false) {
+            for (Integer tempComp : this.stageResults.keySet()) {
+                long altRiderElapsedTime = getElapsedTimeOfRiderFromId(tempComp);
+                long gap = elapsedTimeOfRider - altRiderElapsedTime;
+                if (gap <= 1000000000L && gap > 0L) {
+                    elapsedTimeOfRider = altRiderElapsedTime;
+                    isAdjustmentMade = true;
+                }
+			}
+        }
+		return LocalTime.ofNanoOfDay(elapsedTimeOfRider);
+    }
+
+    /**
+     * The purpose of this method is to return a list
+     * of the ids of the riders which are organised by
+     * their elapsed time.
+     * 
+     * @return A list of type integer sorted with ids.
+     */
+    public int[] getRanksOfRiders() {
+
+        ArrayList<Long> results = new ArrayList<Long>();
+        ArrayList<Integer> listOfSortedPositions = new ArrayList<Integer>();
+        int pointer = 0;
+
+        for (Integer temp : this.stageResults.keySet()) {
+            int position = 0;
+            long elapsedTimeOfRider = getElapsedTimeOfRiderFromId(temp);
+            for (position = 0; position < results.size(); position++) {
+                if (results.get(position) > elapsedTimeOfRider) {
+                    break;
+                }
+            }
+            results.add(position, elapsedTimeOfRider);
+            listOfSortedPositions.add(position, pointer);
+            pointer++;
+        }
+
+        int[] sortedPositions = new int[listOfSortedPositions.size()];
+        for (int i = 0; i < listOfSortedPositions.size(); i++) {
+            sortedPositions[i] = listOfSortedPositions.get(i).intValue();
+        }
+
+        int[] positions = sortedPositions;
+        int[] ranksOfRiders = new int[this.stageResults.size()];
+        int count = 0;
+        for (Integer riderId : this.stageResults.keySet()) {
+            ranksOfRiders[positions[count]] = riderId;
+            count++;
+        }
+
+        return ranksOfRiders;
+    }
+
+    public LocalTime[] getRidersAdjustedTimesRanked() {
+
+        ArrayList<Long> results = new ArrayList<Long>();
+        ArrayList<Integer> listOfSortedPositions = new ArrayList<Integer>();
+        int pointer = 0;
+
+        for (Integer temp : this.stageResults.keySet()) {
+            int position = 0;
+            long elapsedTimeOfRider = getElapsedTimeOfRiderFromId(temp);
+            for (position = 0; position < results.size(); position++) {
+                if (results.get(position) > elapsedTimeOfRider) {
+                    break;
+                }
+            }
+            results.add(position, elapsedTimeOfRider);
+            listOfSortedPositions.add(position, pointer);
+            pointer++;
+        }
+
+        int[] sortedPositions = new int[listOfSortedPositions.size()];
+        for (int i = 0; i < listOfSortedPositions.size(); i++) {
+            sortedPositions[i] = listOfSortedPositions.get(i).intValue();
+        }
+
+
+
+        int[] positions = sortedPositions;
+        LocalTime[] ridersAdjustedTimesRanked = new LocalTime[this.stageResults.size()];
+        int count = 0;
+        for (Integer riderId : this.stageResults.keySet()) {
+            ridersAdjustedTimesRanked[positions[count]] = getAdjustedElapsedTimeOfRider(riderId);
+            count++;
+        }
+        return ridersAdjustedTimesRanked;
+    }
 }

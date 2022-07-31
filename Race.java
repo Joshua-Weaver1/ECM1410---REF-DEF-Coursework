@@ -6,6 +6,7 @@ import java.util.ArrayList;
  * A class used to create an instance of a race.
  * 
  * @author Joshua Weaver
+ * 
  */
 
 public class Race {
@@ -14,7 +15,7 @@ public class Race {
     private String raceDescription;
     private String raceName;
 
-    private ArrayList<Stage> stages = new ArrayList<Stage>();
+    private ArrayList<Stage> raceStages = new ArrayList<Stage>();
 
     /**
      * This is the constructor for a race object.
@@ -62,7 +63,7 @@ public class Race {
      * @return An array of values of the stages of a race.
      */
     public Stage[] getRaceStages() {
-        return this.stages.toArray(new Stage[0]);
+        return this.raceStages.toArray(new Stage[0]);
     }
 
     /**
@@ -71,7 +72,7 @@ public class Race {
      * @param stage
      */
     public void addStageToRace(Stage stage) {
-        this.stages.add(stage);
+        this.raceStages.add(stage);
     }
 
     /**
@@ -80,9 +81,9 @@ public class Race {
      * @return A list containing all the stage ids from a race.
      */
     public int[] getStageIdsFromRace() {
-        int[] listOfStageIds = new int[this.stages.size()];
+        int[] listOfStageIds = new int[this.raceStages.size()];
         for (int i = 0; i < listOfStageIds.length; i++) {
-            listOfStageIds[i] = this.stages.get(i).getStageId();
+            listOfStageIds[i] = this.raceStages.get(i).getStageId();
         }
         return listOfStageIds;
     }
@@ -93,7 +94,7 @@ public class Race {
      * @param stage
      */
     public void removeStageFromRace(Stage stage) {
-        this.stages.remove(stage);
+        this.raceStages.remove(stage);
     }
     
 }

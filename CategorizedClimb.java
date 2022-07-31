@@ -1,5 +1,13 @@
 package cycling;
 
+/**
+ * This class is used to create an instance
+ * of a categorized climb, which is a variation 
+ * of a segment.
+ * 
+ * @author Joshua Weaver
+ */
+
 public class CategorizedClimb extends Segment{
 
     private double categorizedClimbAverageGradient;

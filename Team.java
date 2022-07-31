@@ -66,15 +66,6 @@ public class Team {
     }
 
     /**
-     * This method will remove the associated rider from this team.
-     * 
-     * @param rider
-     */
-    public void removeRider(Rider rider) {
-        this.teamRiders.remove(rider);
-    }
-
-    /**
      * Returns a newly created array containing the riders in this team.
      * 
      * @return An arrray of riders.
@@ -83,10 +74,19 @@ public class Team {
         return this.teamRiders.toArray(new Rider[0]);
     }
 
+    /**
+     * This method will remove the associated rider from this team.
+     * 
+     * @param rider
+     */
+    public void removeRider(Rider rider) {
+        this.teamRiders.remove(rider);
+    }
+
     public int[] getIdsFromRiders() {
         int[] listOfRiderIds = new int[this.teamRiders.size()];
         for (int i = 0; i < listOfRiderIds.length; i++) {
-            listOfRiderIds[i] = this.teamRiders.get(i).getId();
+            listOfRiderIds[i] = this.teamRiders.get(i).getRiderId();
         }
         return listOfRiderIds;
     }

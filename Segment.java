@@ -1,5 +1,12 @@
 package cycling;
 
+/**
+ * A class used to create an instance of a segment.
+ * 
+ * @author Joshua Weaver
+ * 
+ */
+
 public class Segment {
 
     private double segmentLocation;
@@ -7,6 +14,14 @@ public class Segment {
     private int stageId;
     private int segmentId;
 
+    /**
+     * A constructor for a segment.
+     * 
+     * @param stageId
+     * @param segmentId
+     * @param location
+     * @param type
+     */
     public Segment(int stageId, int segmentId, Double location, SegmentType type) {
         this.segmentLocation = location;
         this.segmentType = type;

@@ -4,10 +4,12 @@ package cycling;
  * A class used to create an instance of a rider.
  * 
  * @author Joshua Weaver
+ * 
  */
+
 public class Rider {
 
-    private String name;
+    private String riderName;
     private int teamId;
     private int riderId;
     private int yearOfBirth;
@@ -21,10 +23,10 @@ public class Rider {
      * @param yearOfBirth
      */
     public Rider(int riderId, int teamId, String name, int yearOfBirth) {
+        this.riderName = name;
+        this.yearOfBirth = yearOfBirth;
         this.riderId = riderId;
         this.teamId = teamId;
-        this.name = name;
-        this.yearOfBirth = yearOfBirth;
     }
 
     /**
@@ -32,7 +34,7 @@ public class Rider {
      * 
      * @return An interger value of the rider Id.
      */
-    public int getId() {
+    public int getRiderId() {
         return riderId;
     }
 
@@ -57,9 +59,9 @@ public class Rider {
     /**
      * This will return the name of the rider.
      * 
-     * @return The string of the name of the rider.
+     * @return The string value of the name of the rider.
      */
     public String getName() {
-        return name;
+        return riderName;
     }
 }
