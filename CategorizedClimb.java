@@ -6,19 +6,13 @@ package cycling;
  * of a segment.
  * 
  * @author Joshua Weaver
+ * 
  */
 
 public class CategorizedClimb extends Segment{
 
     private double categorizedClimbAverageGradient;
     private double categorizedClimbLength;
-
-    public CategorizedClimb(int stageId, int segmentId, Double length, Double location, Double averageGradient,
-            SegmentType type) {
-            super(stageId, segmentId, location, type);
-            this.categorizedClimbAverageGradient = averageGradient;
-            this.categorizedClimbLength = length;
-    }
 
     /**
      * This method will return the average gradient of the 
@@ -40,6 +34,23 @@ public class CategorizedClimb extends Segment{
      */
     public double getCategorizedClimbLength() {
         return this.categorizedClimbLength;
+    }
+
+    /**
+     * A constructor for a categorized climb object.
+     * @param stageId
+     * @param segmentId
+     * @param length
+     * @param location
+     * @param averageGradient
+     * @param type
+     */
+    public CategorizedClimb(int stageId, int segmentId, Double length, Double location, Double averageGradient,
+            SegmentType type) {
+            //Method from parent class
+            super(stageId, segmentId, location, type);
+            this.categorizedClimbAverageGradient = averageGradient;
+            this.categorizedClimbLength = length;
     }
 
 }

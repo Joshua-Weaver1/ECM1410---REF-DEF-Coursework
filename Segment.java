@@ -1,5 +1,7 @@
 package cycling;
 
+import java.io.Serializable;
+
 /**
  * A class used to create an instance of a segment.
  * 
@@ -7,26 +9,22 @@ package cycling;
  * 
  */
 
-public class Segment {
+public class Segment implements Serializable{
 
-    private double segmentLocation;
+    //Instance variables
     private SegmentType segmentType;
-    private int stageId;
+    private double segmentLocation;
     private int segmentId;
+    private int stageId;
 
     /**
-     * A constructor for a segment.
+     * This method is used to obtain the segment 
+     * type for this segment.
      * 
-     * @param stageId
-     * @param segmentId
-     * @param location
-     * @param type
+     * @return The SegmentType value for segment type.
      */
-    public Segment(int stageId, int segmentId, Double location, SegmentType type) {
-        this.segmentLocation = location;
-        this.segmentType = type;
-        this.stageId = stageId;
-        this.segmentId = segmentId;
+    public SegmentType getSegmentType() {
+        return this.segmentType;
     }
 
     /**
@@ -40,17 +38,7 @@ public class Segment {
     }
 
     /**
-     * This method is used to obtain the segment 
-     * type for this segment.
-     * 
-     * @return The SegmentType value for segment type.
-     */
-    public SegmentType getSegmentType() {
-        return this.segmentType;
-    }
-
-    /**
-     * This method is used to obtain the stage
+     * The purpose of this method is used to obtain the stage
      * id for this segment.
      * 
      * @return The int value for stage id.
@@ -60,13 +48,28 @@ public class Segment {
     }
 
     /**
-     * This method is used to obtain the segment
+     * This purpose of this method is used to obtain the segment
      * id for this segment.
      * 
      * @return The int value for segment id.
      */
     public int getSegmentId() {
         return this.segmentId;
+    }
+
+    /**
+     * A constructor for a segment.
+     * 
+     * @param stageId
+     * @param segmentId
+     * @param location
+     * @param type
+     */
+    public Segment(int stageId, int segmentId, Double location, SegmentType type) {
+        this.segmentType = type;
+        this.segmentLocation = location;
+        this.segmentId = segmentId;
+        this.stageId = stageId;
     }
 
 }

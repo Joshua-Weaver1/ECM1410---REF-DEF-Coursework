@@ -1,38 +1,27 @@
 package cycling;
 
+import java.io.Serializable;
+
 /**
  * A class used to create an instance of a rider.
+ * These riders will belong to an instance of a team class.
  * 
  * @author Joshua Weaver
  * 
  */
 
-public class Rider {
+public class Rider implements Serializable{
 
+    //Instance variables
     private String riderName;
     private int teamId;
     private int riderId;
-    private int yearOfBirth;
-    
-    /**
-     * This is the constructor for a rider object.
-     * 
-     * @param riderId
-     * @param teamId
-     * @param name
-     * @param yearOfBirth
-     */
-    public Rider(int riderId, int teamId, String name, int yearOfBirth) {
-        this.riderName = name;
-        this.yearOfBirth = yearOfBirth;
-        this.riderId = riderId;
-        this.teamId = teamId;
-    }
+    private int riderYearOfBirth;
 
     /**
-     * Gets the rider Id.
+     * This will return the rider id of the rider.
      * 
-     * @return An interger value of the rider Id.
+     * @return An integer value of the rider id.
      */
     public int getRiderId() {
         return riderId;
@@ -53,7 +42,7 @@ public class Rider {
      * @return The integer of the year of birth of the rider.
      */
     public int getYearOfBirth() {
-        return yearOfBirth;
+        return this.riderYearOfBirth;
     }
 
     /**
@@ -61,7 +50,22 @@ public class Rider {
      * 
      * @return The string value of the name of the rider.
      */
-    public String getName() {
-        return riderName;
+    public String getRiderName() {
+        return this.riderName;
+    }
+
+    /**
+     * This is the constructor for a rider object.
+     * 
+     * @param riderId
+     * @param teamId
+     * @param name
+     * @param yearOfBirth
+     */
+    public Rider(int riderId, int teamId, String name, int yearOfBirth) {
+        this.riderName = name;
+        this.riderYearOfBirth = yearOfBirth;
+        this.teamId = teamId;
+        this.riderId = riderId;
     }
 }

@@ -1,6 +1,12 @@
 package cycling;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -15,14 +21,17 @@ import java.util.HashMap;
  */
 public class CyclingPortal implements MiniCyclingPortalInterface {
 
+	//List to contain all the teams in a particular cycling portal
+	private HashMap<Integer, Team> teams = new HashMap<Integer, Team>();
+	//List to contain all the races in a particular cycling portal
+	private HashMap<Integer, Race> races = new HashMap<Integer, Race>();
+
+	//Instance variables
 	private int teamIdCounter = 1;
 	private int raceIdCounter = 1;
 	private int stageIdCounter = 1;
 	private int riderIdCounter = 1;
 	private int segmentIdCounter = 1;
-
-	private HashMap<Integer, Team> teams = new HashMap<Integer, Team>();
-	private HashMap<Integer, Race> races = new HashMap<Integer, Race>();
 
 	@Override
 	public int[] getRaceIds() {
@@ -191,7 +200,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 		int[] teamIds = new int[teams.size()];
 		int i = 0;
 		for (Team team : teams.values()) {
-			teamIds[i] = team.getId();
+			teamIds[i] = team.getTeamId();
 			i++;
 		}
 		return teamIds;
@@ -212,7 +221,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 		
 		int riderId = riderIdCounter++;
 		Rider newRider = new Rider(riderId, teamID, name, yearOfBirth);
-		team.addRider(newRider);
+		team.addRiderToTeam(newRider);
 
 		return riderId;
 	}
@@ -221,7 +230,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	public void removeRider(int riderId) throws IDNotRecognisedException {
 		Rider riderToRemove = getRiderFromId(riderId);
 		Team team = getTeamFromId(riderToRemove.getTeamId());
-		team.removeRider(riderToRemove);
+		team.removeTeamRider(riderToRemove);
 	}
 
 	@Override
@@ -271,14 +280,93 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 	@Override
 	public int[] getRidersPointsInStage(int stageId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return null;
+		Stage desiredStage = getStageFromId(stageId);
+		int[] riderPoints = new int[getRidersRankInStage(stageId).length];
+		int listSize = riderPoints.length;
+		StageType stageType = desiredStage.getStageType();
+		
+		for (int i = 0; i < listSize; i++) {
+			if (i < 15) {
+				switch (stageType){
+					case FLAT -> {
+						int[] fPoints = new int[]{50, 30, 20, 18, 16, 14, 12, 10, 8, 7, 6, 5, 4, 3, 2};
+						riderPoints[i] = fPoints[i];
+						break;
+					}
+					case TT -> {
+						int[] TTPoints = new int[]{20, 17, 15, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+						riderPoints[i] = TTPoints[i];
+					}
+					case MEDIUM_MOUNTAIN -> {
+						int[] mPoints = new int[]{30, 25, 22, 19, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2};
+						riderPoints[i] = mPoints[i];
+						break;
+					}
+					case HIGH_MOUNTAIN -> {
+						int[] hPoints = new int[]{20, 17, 15, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+						riderPoints[i] = hPoints[i];
+						break;
+					}
+			    }
+		    }
+		    else{
+			riderPoints[i] = 0;
+		    }
+		}
+		return riderPoints;
 	}
 
 	@Override
 	public int[] getRidersMountainPointsInStage(int stageId) throws IDNotRecognisedException {
-		// TODO Auto-generated method stub
-		return null;
+		Stage desiredStage = getStageFromId(stageId);
+		int[] riderPoints = new int[getRidersRankInStage(stageId).length];
+		int listSize = riderPoints.length;
+		Segment[] segments = desiredStage.getStageSegments();
+		
+		for (int j = 0; j < segments.length; j++) {
+			SegmentType type = segments[j].getSegmentType();
+			for (int i = 0; i < listSize; i++) {
+				if (i < 1 && type == SegmentType.C4 || i < 1 && type == SegmentType.C3 || i < 4 && type == SegmentType.C2 ||
+				i < 5 && type == SegmentType.C1 || i < 7 && type == SegmentType.HC || i < 14 && type == SegmentType.SPRINT) {
+					switch (type){
+						case C4 -> {
+							int[] C4Points = new int[]{1};
+							riderPoints[i] += C4Points[i];
+							break;
+						}
+						case C3 -> {
+							int[] C3Points = new int[]{2, 1};
+							riderPoints[i] += C3Points[i];
+							break;
+						}
+						case C2 -> {
+							int[] C2Points = new int[]{5,3,2,1};
+							riderPoints[i] += C2Points[i];
+							break;
+						}
+						case C1 -> {
+							int[] C1Points = new int[]{10,8,6,4,2,1};
+								riderPoints[i] += C1Points[i];
+							break;
+						}
+						case HC -> {
+							int[] HCPoints = new int[]{20,15,12,10,8,6,4,2};
+							riderPoints[i] += HCPoints[i];
+							break;
+						}
+						case SPRINT -> {
+							int[] SprintPoints = new int[]{20,17,15,13,11,10,9,8,7,6,5,4,3,2,1};
+							riderPoints[i] += SprintPoints[i];
+							break;
+						}
+					}
+				}
+				else{
+				riderPoints[i] = 0;
+				}
+		    }
+		}
+		return riderPoints;
 	}
 
 	@Override
@@ -298,17 +386,45 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 
 	@Override
 	public void saveCyclingPortal(String filename) throws IOException {
-		// TODO Auto-generated method stub
+		//Creation of a new file output stream
+		FileOutputStream foStream = new FileOutputStream(filename);
+		//Creation of a new buffered output stream
+		BufferedOutputStream boStream = new BufferedOutputStream(foStream);
+		//Creation of a new object output stream
+		ObjectOutputStream ooStream = new ObjectOutputStream(boStream);
+		//This will write the instance of the cycling portal object to the object output stream
+		ooStream.writeObject(this);
+		//This will close the object output stream
+		ooStream.close();
 
 	}
 
 	@Override
 	public void loadCyclingPortal(String filename) throws IOException, ClassNotFoundException {
-		// TODO Auto-generated method stub
+		//Initialise new file input stream
+		FileInputStream fIStream = new FileInputStream(filename);
+		//Initialise new buffered input stream
+		BufferedInputStream bIStream = new BufferedInputStream(fIStream);
+		//Initialise new object input stream
+		ObjectInputStream oIStream = new ObjectInputStream(bIStream);
+
+		CyclingPortal loadedCyclingPortal = (CyclingPortal)oIStream.readObject();
+
+		//Initialise objects
+		this.teams = loadedCyclingPortal.teams;
+		this.races = loadedCyclingPortal.races;
+
+		//Initialise internal counters
+		this.teamIdCounter = loadedCyclingPortal.teamIdCounter;
+	    this.raceIdCounter = loadedCyclingPortal.raceIdCounter;
+	    this.stageIdCounter = loadedCyclingPortal.stageIdCounter;
+	    this.riderIdCounter = loadedCyclingPortal.riderIdCounter;
+	    this.segmentIdCounter = loadedCyclingPortal.segmentIdCounter;
+
+		//This will close the object input stream
+		oIStream.close();
 
 	}
-
-	//Below I have placed all the additional methods I have created.
 
 	/**
 	 * This will ensure that the name entered follows all the correct
@@ -346,8 +462,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 			throw new InvalidNameException("Cannot be more than 30 Characters. The name must be shortened.");
 		}
 		if (nameTaken) {
-			String response = "The name " + name + " is already taken.";
-			throw new IllegalNameException(response);
+			throw new IllegalNameException("The name " + name + " is already taken.");
 		}
 		if (name.contains(" ")) {
 			throw new InvalidNameException("The name can not have spaces.");
@@ -363,8 +478,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	 */
 	public Team getTeamFromId(int id) throws IDNotRecognisedException {
 		if (!teams.containsKey(id)) {
-			String response = "Team ID " + id + " does not match with a team.";
-			throw new IDNotRecognisedException(response);
+			throw new IDNotRecognisedException("Team ID " + id + " does not match with a team.");
 		}
 		return teams.get(id);
 	}
@@ -395,14 +509,13 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	 */
 	public Rider getRiderFromId(int id) throws IDNotRecognisedException {
 		for (Team team : teams.values()) {
-			for (Rider rider : team.getRiders()) {
+			for (Rider rider : team.getTeamRiders()) {
 				if (rider.getRiderId() == id) {
 					return rider;
 				}
 			}
 		}
-		String response = "The Rider ID " + id + " does not match with a rider.";
-		throw new IDNotRecognisedException(response);
+		throw new IDNotRecognisedException("The Rider ID " + id + " does not match with a rider.");
 	}
 
 	/**
@@ -414,8 +527,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 	 */
 	public Race getRaceFromId(int id) throws IDNotRecognisedException {
 		if (!races.containsKey(id)) {
-			String response = "The Race ID " + id + " does not match with a race.";
-			throw new IDNotRecognisedException(response);
+			throw new IDNotRecognisedException("The Race ID " + id + " does not match with a race.");
 		}
 		return races.get(id);
 	}
@@ -435,8 +547,7 @@ public class CyclingPortal implements MiniCyclingPortalInterface {
 				}
 			}
 		}
-		String response = "The Stage ID " + id + " does not match with a stage.";
-		throw new IDNotRecognisedException(response);
+		throw new IDNotRecognisedException("The Stage ID " + id + " does not match with a stage.");
 	}
 
 	/**

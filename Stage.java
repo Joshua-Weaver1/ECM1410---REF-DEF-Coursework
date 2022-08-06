@@ -1,5 +1,6 @@
 package cycling;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -11,42 +12,22 @@ import java.util.LinkedHashMap;
  * @author Joshua Weaver
  */
 
-public class Stage {
+public class Stage implements Serializable{
 
-    private String stageName;
-    private String stageDescription;
-    private double stageLength;
-    private int stageId;
-    private int raceId;
-    private LocalDateTime stageStartTime;
-    private String stageState;
-    private StageType stageType;
-    private ArrayList<Segment> segments = new ArrayList<Segment>();
-    private LinkedHashMap<Integer, ArrayList<LocalTime>> stageResults = new LinkedHashMap<Integer, ArrayList<LocalTime>>();
+  //List to contain all the segments in a particular stage
+  private ArrayList<Segment> stageSegments = new ArrayList<Segment>();
+  //List to contain all the stage results
+  private LinkedHashMap<Integer, ArrayList<LocalTime>> stageResults = new LinkedHashMap<Integer, ArrayList<LocalTime>>();
 
-    /**
-     * This is the constructor for a stage object.
-     * 
-     * @param raceId
-     * @param stageId
-     * @param stageName
-     * @param description
-     * @param length
-     * @param startTime
-     * @param type
-     */
-    public Stage(int raceId, int stageId, String stageName, String description, double length, LocalDateTime startTime,
-            StageType type) {
-        
-        this.stageLength = length;
-        this.stageId = stageId;
-        this.raceId = raceId;
-        this.stageDescription = description;
-        this.stageName = stageName;
-        this.stageStartTime = startTime;
-        this.stageType = type;
-        this.stageState = "preparation";
-    }
+  //Instance variables
+  private String stageName;
+  private double stageLength;
+  private String stageDescription;
+  private int stageId;
+  private int raceId;
+  private LocalDateTime stageStartTime;
+  private String stageState;
+  private StageType stageType;
 
     /**
      * Used to get the name of the stage.
@@ -133,16 +114,16 @@ public class Stage {
     }
 
     public void addSegmentToStage(Segment segment) {
-        // Ensures that the segments are stored in chronological order
-        int sortedIndex = 0;
-        for (Segment comparison : this.segments) {
-            if (comparison.getSegmentLocation() > segment.getSegmentLocation()) {
+        //Puts segments in required format
+        int count = 0;
+        for (Segment temp : this.stageSegments) {
+            if (temp.getSegmentLocation() > segment.getSegmentLocation()) {
                 break;
             }
-            sortedIndex++;
+            count++;
         }
 
-        this.segments.add(sortedIndex, segment);
+        this.stageSegments.add(count, segment);
     }
 
     /**
@@ -152,9 +133,9 @@ public class Stage {
      * @return A list of type Segment with all segments.
      */
     public int[] getSegmentIdsFromStage() {
-        int[] listOfSegmentIds = new int[this.segments.size()];
+        int[] listOfSegmentIds = new int[this.stageSegments.size()];
         for (int i = 0; i < listOfSegmentIds.length; i++) {
-            listOfSegmentIds[i] = this.segments.get(i).getStageId();
+            listOfSegmentIds[i] = this.stageSegments.get(i).getStageId();
         }
         return listOfSegmentIds;
     }
@@ -166,7 +147,7 @@ public class Stage {
      * @return An array of type Segment.
      */
     public Segment[] getStageSegments() {
-        return this.segments.toArray(new Segment[0]);
+        return this.stageSegments.toArray(new Segment[0]);
     }
 
     /**
@@ -176,7 +157,7 @@ public class Stage {
      * @param segment
      */
     public void removeStageSegment(Segment segment) {
-        this.segments.remove(segment);
+        this.stageSegments.remove(segment);
     }
 
     /**
@@ -203,8 +184,8 @@ public class Stage {
         }
         ArrayList<LocalTime> listOfRiderResults = this.stageResults.get(riderId);
         LocalTime[] riderResultsFromArray = new LocalTime[listOfRiderResults.size()-1];
-        for (int i = 1; i < listOfRiderResults.size()-1; i++) {
-            riderResultsFromArray[i-1] = listOfRiderResults.get(i);
+        for (int j = 1; j < listOfRiderResults.size()-1; j++) {
+            riderResultsFromArray[j-1] = listOfRiderResults.get(j);
         }
         LocalTime timePassedForRider = LocalTime.ofNanoOfDay(getElapsedTimeOfRiderFromId(riderId));
         riderResultsFromArray[listOfRiderResults.size()-2] = timePassedForRider;
@@ -217,12 +198,12 @@ public class Stage {
      * 
      * @param riderId
      * @return The long value of the elapsed time of
-     * the rider in nanoseconds.
+     * the rider.
      */
     private long getElapsedTimeOfRiderFromId(int riderId) {
         assert (this.stageResults.containsKey(riderId));
+        int positionOfLastSegment = this.stageSegments.size() + 1;
         LocalTime timeOfRidersStart = this.stageResults.get(riderId).get(0);
-        int positionOfLastSegment = this.segments.size() + 1;
         LocalTime riderTimeOfFinish = this.stageResults.get(riderId).get(positionOfLastSegment);
         long elapsedTimeOfRider = riderTimeOfFinish.toNanoOfDay() - timeOfRidersStart.toNanoOfDay();
         if (elapsedTimeOfRider < 0) {
@@ -250,6 +231,9 @@ public class Stage {
      * The purpose of this method is to check if this stage state
      * is currently "waiting for results".
      * 
+     * This method is the same as the isStageNotWaitingForResultsCheck()
+     * but is used for the opposite reason.
+     * 
      * @throws InvalidStageStateException
      */
     public void isStageWaitingForResultsCheck() throws InvalidStageStateException {
@@ -271,7 +255,9 @@ public class Stage {
 
     /**
      * The purpose of this method is to obtain the adjusted elapsed time
-     * of a specified rider. If two riders finish inside of 1 second, then
+     * of a specified rider.
+     * 
+     * Note: If two riders finish inside of 1 second, then
      * they both have the quicker time.
      * 
      * @param riderId
@@ -312,19 +298,19 @@ public class Stage {
      */
     public int[] getRanksOfRiders() {
 
-        ArrayList<Long> results = new ArrayList<Long>();
+        ArrayList<Long> tempList = new ArrayList<Long>();
         ArrayList<Integer> listOfSortedPositions = new ArrayList<Integer>();
         int pointer = 0;
 
         for (Integer temp : this.stageResults.keySet()) {
             int position = 0;
             long elapsedTimeOfRider = getElapsedTimeOfRiderFromId(temp);
-            for (position = 0; position < results.size(); position++) {
-                if (results.get(position) > elapsedTimeOfRider) {
+            for (position = 0; position < tempList.size(); position++) {
+                if (tempList.get(position) > elapsedTimeOfRider) {
                     break;
                 }
             }
-            results.add(position, elapsedTimeOfRider);
+            tempList.add(position, elapsedTimeOfRider);
             listOfSortedPositions.add(position, pointer);
             pointer++;
         }
@@ -347,19 +333,19 @@ public class Stage {
 
     public LocalTime[] getRidersAdjustedTimesRanked() {
 
-        ArrayList<Long> results = new ArrayList<Long>();
+        ArrayList<Long> tempList = new ArrayList<Long>();
         ArrayList<Integer> listOfSortedPositions = new ArrayList<Integer>();
         int pointer = 0;
 
         for (Integer temp : this.stageResults.keySet()) {
             int position = 0;
             long elapsedTimeOfRider = getElapsedTimeOfRiderFromId(temp);
-            for (position = 0; position < results.size(); position++) {
-                if (results.get(position) > elapsedTimeOfRider) {
+            for (position = 0; position < tempList.size(); position++) {
+                if (tempList.get(position) > elapsedTimeOfRider) {
                     break;
                 }
             }
-            results.add(position, elapsedTimeOfRider);
+            tempList.add(position, elapsedTimeOfRider);
             listOfSortedPositions.add(position, pointer);
             pointer++;
         }
@@ -374,10 +360,34 @@ public class Stage {
         int[] positions = sortedPositions;
         LocalTime[] ridersAdjustedTimesRanked = new LocalTime[this.stageResults.size()];
         int count = 0;
-        for (Integer riderId : this.stageResults.keySet()) {
-            ridersAdjustedTimesRanked[positions[count]] = getAdjustedElapsedTimeOfRider(riderId);
+        for (Integer temp : this.stageResults.keySet()) {
+            ridersAdjustedTimesRanked[positions[count]] = getAdjustedElapsedTimeOfRider(temp);
             count++;
         }
         return ridersAdjustedTimesRanked;
+    }
+
+    /**
+     * This is the constructor for a stage object.
+     * 
+     * @param raceId
+     * @param stageId
+     * @param stageName
+     * @param description
+     * @param length
+     * @param startTime
+     * @param type
+     */
+    public Stage(int raceId, int stageId, String stageName, String description, double length, LocalDateTime startTime,
+            StageType type) {
+        
+        this.stageLength = length;
+        this.stageId = stageId;
+        this.raceId = raceId;
+        this.stageDescription = description;
+        this.stageName = stageName;
+        this.stageStartTime = startTime;
+        this.stageState = "prep";
+        this.stageType = type;
     }
 }
